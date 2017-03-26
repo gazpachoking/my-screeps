@@ -1,11 +1,11 @@
 const ROLE_PRIORITIES = ['harvester', 'miner', 'builder', 'repairer', 'upgrader', 'wallRepairer'];
 const ROLE_BALANCE = {
-    harvester: {min:1, max: 2, required: true},
+    harvester: {min:2, max: 2, required: true},
     upgrader: {min:1, max: 2},
     builder: {min:1, max:100},
     repairer: {min:1, max:2},
     wallRepairer: {min:0, max:0},
-    miner: {min:2, max:2}
+    miner: {min:3, max:3}
 };
 
 module.exports = function() {
@@ -50,11 +50,12 @@ module.exports = function() {
         let name = 0;
         let energy = this.room.energyCapacityAvailable;
         for (let roleName of ROLE_PRIORITIES) {
-            let roleNum = _.get(roleNumbers, roleName, 0);
+            let roleNum = _.get(creepsByRole[roleName], 'length', 0);
             let roleBalance = ROLE_BALANCE[roleName];
             if (roleNum < roleBalance.min) {
                 name = ROLE_MODULES[roleName].createCreep(this, energy);
-                if (name == ERR_NOT_ENOUGH_ENERGY && roleNum == 0 && _.get(roleBalance, 'priority', false)) {
+                //console.log(roleName + ' needed');
+                if (name == ERR_NOT_ENOUGH_ENERGY && roleNum == 0 && _.get(roleBalance, 'required', false)) {
                     // spawn one with what is available
                     return ROLE_MODULES[roleName].createCreep(this, this.room.energyAvailable);
                 }

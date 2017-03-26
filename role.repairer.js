@@ -3,7 +3,7 @@ var roleBuilder = require('role.builder');
 module.exports = {
     name: 'repairer',
     createCreep: function (spawn, energy) {
-        spawn.createCustomCreep(energy, this.name);
+        return spawn.createCustomCreep(energy, this.name);
     },
     // a function to run the logic for this role
     run: function(creep) {
@@ -27,7 +27,7 @@ module.exports = {
                 // the second argument for findClosestByPath is an object which takes
                 // a property called filter which can be a function
                 // we use the arrow operator to define it
-                filter: (s) => s.hits < s.hitsMax && s.structureType != STRUCTURE_WALL
+                filter: (s) => s.hits < s.hitsMax - 100 && s.structureType != STRUCTURE_WALL
             });
 
             // if we find one

@@ -1,23 +1,21 @@
 module.exports = {
     name: 'miner',
     createCreep: function (spawn, energy) {
-        spawn.createCustomCreep(energy, this.name, [CARRY, WORK, MOVE], [WORK, WORK, CARRY]);
+        return spawn.createCustomCreep(energy, this.name, [CARRY, WORK, MOVE], [WORK, CARRY]);
     },
     /** @param {Creep} creep **/
     run: function(creep) {
-        if (creep.carry.energy < creep.carryCapacity / 4) {
-            this.harvestEnergy(creep)
-        }
-        else {
+        if (creep.carry.energy > 25) {
             let needers = creep.pos.findInRange(FIND_CREEPS, 1,
-                {filter: (c) => c != creep && c.carry.energy < c.carryCapacity});
-            //console.log(needers.type);
-            if (needers != undefined) {
-                creep.transfer(needers[0], RESOURCE_ENERGY)
+                {filter: (c) => c.role != this.name && c.energyDefecit >= 10});
+            if (needers && needers.length > 0) {
+                for (let needer of needers) {
+                    creep.transfer(needer, RESOURCE_ENERGY);
+                }
             }
-            else if (creep.carry.energy < creep.carry.capacity) {
-                this.harvestEnergy(creep)
-            }
+        }
+        if (creep.carry.energy < creep.carryCapacity) {
+            this.harvestEnergy(creep)
         }
     },
     harvestEnergy: function(creep) {

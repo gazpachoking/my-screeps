@@ -1,7 +1,7 @@
 module.exports = {
     name: 'upgrader',
     createCreep: function (spawn, energy) {
-        spawn.createCustomCreep(energy, this.name);
+        return spawn.createCustomCreep(energy, this.name);
     },
     // a function to run the logic for this role
     run: function(creep) {
@@ -16,13 +16,14 @@ module.exports = {
             creep.memory.working = true;
         }
 
+        upgrade_result = creep.upgradeController(creep.room.controller);
         // if creep is supposed to transfer energy to the controller
         if (creep.memory.working == true) {
             // instead of upgraderController we could also use:
             // if (creep.transfer(creep.room.controller, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
 
             // try to upgrade the controller
-            if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+            if (upgrade_result == ERR_NOT_IN_RANGE) {
                 // if not in range, move towards the controller
                 creep.moveTo(creep.room.controller);
             }

@@ -3,7 +3,7 @@ var roleUpgrader = require('role.upgrader');
 module.exports = {
     name: 'builder',
     createCreep: function (spawn, energy) {
-        spawn.createCustomCreep(energy, this.name);
+        return spawn.createCustomCreep(energy, this.name);
     },
     // a function to run the logic for this role
     run: function(creep) {
