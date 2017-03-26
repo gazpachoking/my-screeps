@@ -32,6 +32,7 @@ module.exports = function() {
             let name = this.createCreep(minParts, undefined, {role: roleName, working: false, level: level});
             if (!(name <= 0)) {
                 console.log('Spawning new level ' + level.toFixed(1) + ' ' + roleName +' creep: ' + name);
+                global.creepsByRole = _.groupBy(Game.creeps, 'role');
             }
             return name;
         };

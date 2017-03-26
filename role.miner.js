@@ -33,7 +33,13 @@ module.exports = {
                     }
                 }
             }
-            creep.memory.target = creep.pos.findClosestByPath(sources).id;
+            let target = creep.pos.findClosestByPath(sources);
+            if (target) {
+                creep.memory.target = target.id;
+            }
+            else {
+                return;
+            }
         }
         let target = Game.getObjectById(creep.memory.target);
         if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
