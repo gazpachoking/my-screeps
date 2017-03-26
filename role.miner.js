@@ -1,17 +1,19 @@
 module.exports = {
     name: 'miner',
     createCreep: function (spawn, energy) {
-        return spawn.createCustomCreep(energy, this.name, [CARRY, WORK, MOVE], [WORK, CARRY]);
+        return spawn.createCustomCreep(energy, this.name, [CARRY, WORK, MOVE], [WORK, CARRY, WORK]);
     },
     /** @param {Creep} creep **/
     run: function(creep) {
         if (creep.carry.energy > 25) {
             let needers = creep.pos.findInRange(FIND_CREEPS, 1,
-                {filter: (c) => c.role != this.name && c.energyDefecit >= 10});
+                {filter: (c) => c.role != this.name && c.energyDefecit >= 1});
             if (needers && needers.length > 0) {
-                for (let needer of needers) {
+                needer = _.min(needers)
+                needer = _.max(needers, 'energyDefecit');
+                //for (let needer of needers) {
                     creep.transfer(needer, RESOURCE_ENERGY);
-                }
+                //}
             }
         }
         if (creep.carry.energy < creep.carryCapacity) {
@@ -19,9 +21,23 @@ module.exports = {
         }
     },
     harvestEnergy: function(creep) {
-        let source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
-        if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-            creep.moveTo(source);
+        if (!creep.memory.target) {
+
+            let sources = creep.room.find(FIND_SOURCES);
+            let otherMiners = _.get(creepsByRole, 'miner', []);
+            for (c of otherMiners) {
+                if (c.memory.target) {
+                    let i = sources.indexOf(c.memory.target);
+                    if (i != -1) {
+                        sources.splice(i, 1);
+                    }
+                }
+            }
+            creep.memory.target = creep.pos.findClosestByPath(sources).id;
+        }
+        let target = Game.getObjectById(creep.memory.target);
+        if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(target);
         }
     }
 };

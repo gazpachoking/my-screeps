@@ -18,7 +18,7 @@ module.exports.loop = function () {
         if (Game.creeps[name] == undefined) {
             let c = Memory.creeps[name];
             // if not, delete the memory entry
-            console.log(c.name + ', level ' + c.memory.level.toFixed(1) + ' ' + c.role + ' has died.');
+            console.log(name + ', level ' + c.level.toFixed(1) + ' ' + c.role + ' has died.');
             delete Memory.creeps[name];
         }
     }

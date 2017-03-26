@@ -5,7 +5,7 @@ const ROLE_BALANCE = {
     builder: {min:1, max:100},
     repairer: {min:1, max:2},
     wallRepairer: {min:0, max:0},
-    miner: {min:3, max:3}
+    miner: {min:2, max:2}
 };
 
 module.exports = function() {
@@ -53,13 +53,15 @@ module.exports = function() {
             let roleNum = _.get(creepsByRole[roleName], 'length', 0);
             let roleBalance = ROLE_BALANCE[roleName];
             if (roleNum < roleBalance.min) {
-                name = ROLE_MODULES[roleName].createCreep(this, energy);
                 //console.log(roleName + ' needed');
-                if (name == ERR_NOT_ENOUGH_ENERGY && roleNum == 0 && _.get(roleBalance, 'required', false)) {
+                if (roleNum == 0 && _.get(roleBalance, 'required', false)) {
                     // spawn one with what is available
                     return ROLE_MODULES[roleName].createCreep(this, this.room.energyAvailable);
                 }
-                return name;
+                if (this.room.energyAvailable < energy) {
+                    return ERR_NOT_ENOUGH_ENERGY;
+                }
+                return ROLE_MODULES[roleName].createCreep(this, energy);
             }
         }
         // After minimums are filled
