@@ -2,6 +2,9 @@ var roleBuilder = require('role.builder');
 
 module.exports = {
     name: 'wallRepairer',
+    createCreep: function (spawn, energy) {
+        spawn.createCustomCreep(energy, this.name);
+    },
     // a function to run the logic for this role
     run: function(creep) {
         // if creep is trying to repair something but has no energy left

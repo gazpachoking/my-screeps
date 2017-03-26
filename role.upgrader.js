@@ -1,5 +1,8 @@
 module.exports = {
     name: 'upgrader',
+    createCreep: function (spawn, energy) {
+        spawn.createCustomCreep(energy, this.name);
+    },
     // a function to run the logic for this role
     run: function(creep) {
         // if creep is bringing energy to the controller but has no energy left

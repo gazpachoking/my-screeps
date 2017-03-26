@@ -12,4 +12,11 @@ module.exports = function() {
             }
             return result;
         };
+    Object.defineProperty(Creep.prototype, 'role', {get: function() {
+        //console.log(this);
+        return this.memory.role;
+    }});
+    Creep.prototype.run = function () {
+        ROLE_MODULES[this.role].run(this);
+    }
 };

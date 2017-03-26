@@ -1,5 +1,8 @@
 module.exports = {
     name: 'harvester',
+    createCreep: function (spawn, energy) {
+        spawn.createCustomCreep(energy, this.name);
+    },
     // a function to run the logic for this role
     run: function(creep) {
         //creep.memory.working = true;
