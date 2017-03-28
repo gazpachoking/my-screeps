@@ -3,8 +3,8 @@ module.exports = function() {
     Creep.prototype.gatherEnergy =
         function() {
             // find closest source
-            let minEnergy = this.role=='harvester'?25:0;
-            let sources = _.filter(creepsByRole.miner, (c) => c.carry.energy >= minEnergy);
+            let minEnergy = this.role=='harvester'?30:0;
+            let sources = _.filter(creepsByRole.miner, (c) => c.carry.energy > minEnergy);
             //console.log(this.name + sources.length)
             if (sources.length == 0) {
                 sources = this.room.find(FIND_SOURCES_ACTIVE);

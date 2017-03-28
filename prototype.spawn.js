@@ -1,7 +1,7 @@
 const ROLE_PRIORITIES = ['harvester', 'miner', 'builder', 'repairer', 'upgrader', 'wallRepairer'];
 const ROLE_BALANCE = {
     harvester: {min:2, max: 2, required: true},
-    upgrader: {min:1, max: 2},
+    upgrader: {min:2, max: 2},
     builder: {min:1, max:100},
     repairer: {min:1, max:2},
     wallRepairer: {min:0, max:0},
