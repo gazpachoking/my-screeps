@@ -1,7 +1,7 @@
 module.exports = {
     name: 'miner',
     createCreep: function (spawn, energy) {
-        return spawn.createCustomCreep(energy, this.name, [CARRY, WORK, MOVE], [WORK, CARRY, WORK]);
+        return spawn.createCustomCreep(energy, this.name, [CARRY, WORK, MOVE], [WORK, CARRY]);
     },
     /** @param {Creep} creep **/
     run: function(creep) {

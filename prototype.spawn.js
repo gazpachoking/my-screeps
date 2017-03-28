@@ -43,11 +43,12 @@ module.exports = function() {
         // count the number of creeps alive for each role
         // _.sum will count the number of properties in Game.creeps filtered by the
         //  arrow function, which checks for the creep being a harvester
-        roleNumbers = {};
-        for (let creepName in Game.creeps) {
-            c = Game.creeps[creepName];
-            roleNumbers[c.role] = (roleNumbers[c.role] || 0) + 1
-        }
+        let roleNumbers = _(this.room.find(FIND_MY_CREEPS)).countBy(c => c.memory.role);
+        //console.log('' + JSON.stringify(roleNumbers));
+        // for (let creepName in Game.creeps) {
+        //     c = Game.creeps[creepName];
+        //     roleNumbers[c.role] = (roleNumbers[c.role] || 0) + 1
+        // }
         let name = 0;
         let energy = this.room.energyCapacityAvailable;
         for (let roleName of ROLE_PRIORITIES) {
@@ -66,6 +67,10 @@ module.exports = function() {
             }
         }
         // After minimums are filled
+        let myCreeps = this.room.find(FIND_MY_CREEPS) || [];
+        if (myCreeps.length >= 10) {
+            return;
+        }
         if (this.room.energyAvailable < this.room.energyCapacityAvailable) {
             return ERR_NOT_ENOUGH_ENERGY;
         }

@@ -27,6 +27,10 @@ module.exports = function() {
         return this.memory.role;
     }});
     Creep.prototype.run = function () {
+        if (this.spawning) {
+            return;
+        }
+
         ROLE_MODULES[this.role].run(this);
     };
     Object.defineProperty(Creep.prototype, 'energyDefecit', {get: function() {

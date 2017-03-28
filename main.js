@@ -1,6 +1,7 @@
 // import modules
 require('prototype.spawn')();
 require('prototype.creep')();
+require('prototype.room');
 global.ROLES = ['harvester', 'upgrader', 'builder', 'repairer', 'wallRepairer', 'miner'];
 global.ROLE_MODULES = {};
 for (let r of ROLES) {
@@ -23,24 +24,29 @@ module.exports.loop = function () {
             global.creepsByRole = _.groupBy(Game.creeps, 'role');
         }
     }
-    // for every creep name in Game.creeps
-    for (let creepName in Game.creeps) {
-        // get the creep object
-        let creep = Game.creeps[creepName];
-        creep.run();
+    for (let roomName in Game.rooms) {
+        let room = Game.rooms[roomName];
+        //console.log(room);
+        room.run();
     }
-
-    let towers = Game.rooms.E89N74.find(FIND_STRUCTURES, {
-        filter: (s) => s.structureType == STRUCTURE_TOWER
-    });
-    for (let tower of towers) {
-        let target = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-        if (target != undefined) {
-            tower.attack(target);
-        }
-    }
-
-    for (let spawnName in Game.spawns){
-        Game.spawns[spawnName].doSpawn();
-    }
+    // // for every creep name in Game.creeps
+    // for (let creepName in Game.creeps) {
+    //     // get the creep object
+    //     let creep = Game.creeps[creepName];
+    //     creep.run();
+    // }
+    //
+    // let towers = Game.rooms.E89N74.find(FIND_STRUCTURES, {
+    //     filter: (s) => s.structureType == STRUCTURE_TOWER
+    // });
+    // for (let tower of towers) {
+    //     let target = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+    //     if (target != undefined) {
+    //         tower.attack(target);
+    //     }
+    // }
+    //
+    // for (let spawnName in Game.spawns){
+    //     Game.spawns[spawnName].doSpawn();
+    // }
 };
