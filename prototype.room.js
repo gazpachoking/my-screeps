@@ -1,5 +1,5 @@
 Room.prototype.init = function () {
-    this.memory.positions = {
+    this.memory.position = {
         creep: {},
         structure: {}
     };
@@ -7,7 +7,7 @@ Room.prototype.init = function () {
     // Find source mining spots
     let sources = this.find(FIND_SOURCES);
     for (let source of sources) {
-        let sourcerPos = source.findValidAdjacentPos();
+        let sourcerPos = source.pos.findValidAdjacentPos();
         if (sourcerPos != ERR_NOT_FOUND) {
             this.memory.positions.creep[source.id] = sourcerPos;
         }
@@ -15,9 +15,13 @@ Room.prototype.init = function () {
             console.log('Failed to find position adjacent to source.');
         }
     }
+    this.memory.initialized = true;
 };
 
 Room.prototype.run = function () {
+    if (!this.memory.initialized) {
+        this.init();
+    }
     // run the creeps in the room
     for (let creep of this.find(FIND_MY_CREEPS)) {
         creep.run();
@@ -36,10 +40,29 @@ Room.prototype.run = function () {
         }
     }
     // do spawning
-    for (let spawn of this.find(FIND_MY_SPAWNS)){
-        spawn.doSpawn();
+    if (Game.time % 5 == 0) {
+        this.checkCreepsNeeded();
     }
-
+    if (this.memory.spawnQueue.length > 0) {
+        let spawn = this.findClosestSpawn();
+        // TODO: This only spawns when room is full of energy right now. We might not want/need all of it.
+        if (spawn.room.energyAvailable >= spawn.room.energyCapacityAvailable) {
+            // TODO: Sort spawnqueue by priority
+            let newCreep = this.memory.spawnQueue[0];
+            let name = ROLE_MODULES[newCreep.role].createCreep(spawn, spawn.room.energyAvailable);
+            if (_.isString(name)) {
+                Game.creeps[name].memory = newCreep;
+                this.memory.spawnQueue.shift();
+                return;
+            }
+        }
+    }
+    // TODO: Remove this old spawn code
+    if ((Game.time - 1) % 5 == 0) {
+        for (let spawn of this.find(FIND_MY_SPAWNS)) {
+            spawn.doSpawn();
+        }
+    }
 };
 
 Room.prototype.genCreepMem = function(role, targetId, targetRoom, level, base) {
@@ -57,7 +80,7 @@ Room.prototype.genCreepMem = function(role, targetId, targetRoom, level, base) {
 
 Room.prototype.inQueue = function (creepMemory) {
     this.memory.spawnQueue = this.memory.spawnQueue || [];
-    for (let item of this.memory.queue) {
+    for (let item of this.memory.spawnQueue) {
         if (!item.routing) {
             continue;
         }
@@ -73,7 +96,7 @@ Room.prototype.inQueue = function (creepMemory) {
     return false;
 };
 
-Room.prototype.spawnCreep = function (role, targetId, targetRoom, level, base) {
+Room.prototype.queueCreepSpawn = function (role, targetId, targetRoom, level, base) {
     let newCreep = this.genCreepMem(role, targetId, targetRoom, level, base);
     if (this.inQueue(newCreep)) {
         return false;
@@ -89,23 +112,29 @@ Room.prototype.checkCreepsNeeded = function () {
     let source;
 
     let isSourcer = function(object) {
-        if (object.memory.role !== 'sourcer') {
+        if (object.role !== 'sourcer') {
             return false;
         }
-        if (object.memory.routing && object.memory.routing.targetId !== source.id) {
+        if (object.routing && object.routing.targetId !== source.id) {
           return false;
         }
-        if (object.memory.routing && object.memory.routing.targetRoom !== source.pos.roomName) {
+        if (object.routing && object.routing.targetRoom !== source.pos.roomName) {
           return false;
         }
         return true;
     };
 
     for (source of sources) {
-        let sourcers = this.find(FIND_MY_CREEPS, {filter: isSourcer});
+        let sourcers = _(Memory.creeps).filter(isSourcer).value();
+        //console.log(JSON.stringify(sourcers));
         if (sourcers.length === 0) {
-            this.spawnCreep('sourcer', source.id, this.name);
+            this.queueCreepSpawn('sourcer', source.id, this.name);
         }
     }
 
+};
+
+Room.prototype.findClosestSpawn = function () {
+    // TODO: multi-room
+    return this.find(FIND_MY_SPAWNS)[0];
 };

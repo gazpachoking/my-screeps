@@ -1,11 +1,12 @@
-const ROLE_PRIORITIES = ['harvester', 'miner', 'builder', 'repairer', 'upgrader', 'wallRepairer'];
+const ROLE_PRIORITIES = ['harvester', 'builder', 'repairer', 'upgrader', 'wallRepairer'];
 const ROLE_BALANCE = {
     harvester: {min:2, max: 2, required: true},
-    upgrader: {min:2, max: 2},
-    builder: {min:1, max:100},
+    upgrader: {min:1, max: 2},
+    builder: {min:2, max:100},
     repairer: {min:1, max:2},
     wallRepairer: {min:0, max:0},
-    miner: {min:2, max:2}
+    miner: {min:0, max:2},
+    sourcer: {min:0}
 };
 
 module.exports = function() {
@@ -43,7 +44,7 @@ module.exports = function() {
         // count the number of creeps alive for each role
         // _.sum will count the number of properties in Game.creeps filtered by the
         //  arrow function, which checks for the creep being a harvester
-        let roleNumbers = _(this.room.find(FIND_MY_CREEPS)).countBy(c => c.memory.role);
+        let roleNumbers = _(this.room.find(FIND_MY_CREEPS)).countBy(c => c.memory.role).value();
         //console.log('' + JSON.stringify(roleNumbers));
         // for (let creepName in Game.creeps) {
         //     c = Game.creeps[creepName];
@@ -52,7 +53,7 @@ module.exports = function() {
         let name = 0;
         let energy = this.room.energyCapacityAvailable;
         for (let roleName of ROLE_PRIORITIES) {
-            let roleNum = _.get(creepsByRole[roleName], 'length', 0);
+            let roleNum = roleNumbers[roleName] || 0;
             let roleBalance = ROLE_BALANCE[roleName];
             if (roleNum < roleBalance.min) {
                 //console.log(roleName + ' needed');
@@ -67,6 +68,7 @@ module.exports = function() {
             }
         }
         // After minimums are filled
+        return;
         let myCreeps = this.room.find(FIND_MY_CREEPS) || [];
         if (myCreeps.length >= 10) {
             return;

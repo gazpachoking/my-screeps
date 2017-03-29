@@ -7,10 +7,10 @@ module.exports = {
     run: function(creep) {
         if (creep.carry.energy > 25) {
             let needers = creep.pos.findInRange(FIND_CREEPS, 1,
-                {filter: (c) => c.role != this.name && c.energyDefecit >= 1});
+                {filter: (c) => c.role != this.name && c.energyDeficit >= 1});
             if (needers && needers.length > 0) {
                 needer = _.min(needers)
-                needer = _.max(needers, 'energyDefecit');
+                needer = _.max(needers, 'energyDeficit');
                 //for (let needer of needers) {
                     creep.transfer(needer, RESOURCE_ENERGY);
                 //}

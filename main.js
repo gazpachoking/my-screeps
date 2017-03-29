@@ -2,7 +2,8 @@
 require('prototype.spawn')();
 require('prototype.creep')();
 require('prototype.room');
-global.ROLES = ['harvester', 'upgrader', 'builder', 'repairer', 'wallRepairer', 'miner'];
+require('prototype.roomPosition');
+global.ROLES = ['harvester', 'upgrader', 'builder', 'repairer', 'wallRepairer', 'miner', 'sourcer'];
 global.ROLE_MODULES = {};
 for (let r of ROLES) {
     ROLE_MODULES[r] = require('role.' + r);
