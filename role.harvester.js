@@ -76,3 +76,43 @@ module.exports = {
         }
     }
 };
+
+class Harvester extends Role {
+    static get name () {
+        return 'harvester';
+    }
+
+    static *creepsNeeded (room) {
+        let numCreeps = room.creepsByRole();
+        if (numCreeps.harvester < 2) {
+            let energyAllowance = numCreeps.harvester == 0 ? room.energyAvailable : room.energyCapacityAvailable;
+            let newCreep = this.creepBuilder(energyAllowance, 'MWC').addRouting(room.name).priority(2);
+            if (numCreeps.sourcer > 0) {
+                newCreep.addParts('MC', 5);
+            } else {
+                newCreep.addParts('MWC', 4);
+            }
+            yield newCreep;
+        }
+    }
+    run () {
+        // Get to our target room first
+        if (this.handleRouting()) {
+            return;
+        }
+        // Harvester's primary job is to make sure we can spawn creeps
+        let roomNeedsEnergy = this.creep.room.energyAvailable < this.creep.room.energyCapacityAvailable;
+        if (roomNeedsEnergy && this.creep.carry.energy > 0) {
+            let structures = creep.pos.findInRange(FIND_MY_STRUCTURES, 1, {
+                filter: (s) => (s.structureType == STRUCTURE_SPAWN
+                             || s.structureType == STRUCTURE_EXTENSION)
+                             && s.energy < s.energyCapacity
+            });
+            if (structures) {
+                this.creep.transfer(structures[0], RESOURCE_ENERGY);
+            }
+        }
+    }
+}
+
+Role.register(Harvester);

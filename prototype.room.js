@@ -29,6 +29,7 @@ Room.prototype.run = function () {
     // check for hostiles and handle them
     let hostiles = this.find(FIND_HOSTILE_CREEPS);
     if (hostiles) {
+
         let towers = this.find(FIND_STRUCTURES, {
             filter: (s) => s.structureType == STRUCTURE_TOWER
         });
@@ -137,4 +138,9 @@ Room.prototype.checkCreepsNeeded = function () {
 Room.prototype.findClosestSpawn = function () {
     // TODO: multi-room
     return this.find(FIND_MY_SPAWNS)[0];
+};
+
+Room.prototype.creepsByRole = function () {
+    let defaults = _.mapValues(ROLES, (...x) => 0);
+    return _.assign(defaults, _.countBy(this.find(FIND_MY_CREEPS), c => c.memory.role));
 };

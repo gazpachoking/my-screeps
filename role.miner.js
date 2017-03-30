@@ -6,7 +6,7 @@ module.exports = {
     /** @param {Creep} creep **/
     run: function(creep) {
         if (creep.carry.energy > 25) {
-            let needers = creep.pos.findInRange(FIND_CREEPS, 1,
+            let needers = creep.pos.findInRange(FIND_MY_CREEPS, 1,
                 {filter: (c) => c.role != this.name && c.energyDeficit >= 1});
             if (needers && needers.length > 0) {
                 needer = _.min(needers)

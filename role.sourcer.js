@@ -4,10 +4,10 @@ module.exports = {
         prefix: [MOVE, WORK, CARRY],
         repeat: [WORK, CARRY],
     },
-    createCreep: function (spawn, energy) {
+    createCreep (spawn, energy) {
         return spawn.createCustomCreep(energy, this.name, [CARRY, WORK, MOVE], [WORK, CARRY]);
     },
-    run: function(creep) {
+    run (creep) {
         if (!this.doRouting(creep)) {
             // Always harvest the source
             let source = Game.getObjectById(creep.memory.routing.targetId);
@@ -18,7 +18,7 @@ module.exports = {
                 creep.pickup(droppedEnergy[0]);
             }
             if (creep.carry.energy > 0) {
-                let needers = creep.pos.findInRange(FIND_CREEPS, 1,
+                let needers = creep.pos.findInRange(FIND_MY_CREEPS, 1,
                     {filter: (c) => c.role != this.name && c.energyDeficit >= 1});
                 if (needers && needers.length > 0) {
                     let needer = _.max(needers, 'energyDeficit');
@@ -28,7 +28,7 @@ module.exports = {
 
         }
     },
-    doRouting: function(creep) {
+    doRouting (creep) {
         if (!creep.memory.routing) {
             console.log('No routing for creep!');
             return true;
@@ -45,3 +45,42 @@ module.exports = {
         return true;
     }
 };
+
+class Sourcer extends Role {
+    static get name () {
+        return 'sourcer';
+    }
+
+    static *creepsNeeded (room) {
+        let sources = room.find(FIND_SOURCES);
+
+        for (let source of sources) {
+            let sourcers = room.find(FIND_MY_CREEPS, {filter:
+                (c) => c.memory.role == 'sourcer' && c.memory.routing.targetId == source.id});
+            if (sourcers.length == 0) {
+                yield this.creepBuilder(room.energyCapacityAvailable, 'WCM')
+                    .addParts('WC', 4).addParts('C', 2)
+                    .addRouting(room.name, source.id)
+                    .setPriority(1);
+            }
+        }
+    }
+
+    run () {
+        this.pickupDroppedEnergy();
+        if (this.creep.carry.energy > 0) {
+            let needers = this.creep.pos.findInRange(FIND_MY_CREEPS, 1,
+                {filter: (c) => c.memory.role != this.name && c.energyDeficit >= 1});
+            if (needers.length > 0) {
+                let needer = _.max(needers, 'energyDeficit');
+                this.creep.transfer(needer, RESOURCE_ENERGY);
+            }
+        }
+        let source = Game.getObjectById(this.routing.targetId);
+        if (this.creep.harvest(source) == ERR_NOT_IN_RANGE) {
+            this.handleRouting();
+        }
+    }
+}
+
+Role.register(Sourcer);
