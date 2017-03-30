@@ -1,7 +1,5 @@
 let CreepBuilder = require('creep_builder');
 
-let ROLES = {};
-
 class Role {
     static register(subclass) {
         ROLES[subclass.name] = subclass;
@@ -104,5 +102,13 @@ class Role {
     }
 }
 
+// Load all our role files
 global.Role = Role;
-global.ROLES = ROLES;
+let roleFiles = ['builder', 'harvester', 'miner', 'repairer', 'sourcer', 'upgrader', 'wallRepairer'];
+global.ROLES = [];
+global.ROLE_CLASS = {};
+for (let r of roleFiles) {
+    let rollClass = require('role.' + r);
+    ROLE_CLASS[rollClass.name] = rollClass;
+    ROLES.push(rollClass.name);
+}
