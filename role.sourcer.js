@@ -68,6 +68,10 @@ class Sourcer extends Role {
 
     run () {
         this.pickupDroppedEnergy();
+        let sources = this.creep.pos.findInRange(FIND_SOURCES_ACTIVE, 1);
+        if (sources.length > 0) {
+            this.creep.harvest(sources[0]);
+        }
         if (this.creep.carry.energy > 0) {
             let needers = this.creep.pos.findInRange(FIND_MY_CREEPS, 1,
                 {filter: (c) => c.memory.role != this.name && c.energyDeficit >= 1});
@@ -76,10 +80,7 @@ class Sourcer extends Role {
                 this.creep.transfer(needer, RESOURCE_ENERGY);
             }
         }
-        let source = Game.getObjectById(this.routing.targetId);
-        if (this.creep.harvest(source) == ERR_NOT_IN_RANGE) {
-            this.handleRouting();
-        }
+        this.handleRouting();
     }
 }
 

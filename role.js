@@ -1,4 +1,4 @@
-require('creep_builder');
+let CreepBuilder = require('creep_builder');
 
 let ROLES = {};
 
@@ -8,8 +8,7 @@ class Role {
     }
 
     static creepBuilder (energyAvailable, minParts) {
-        let cB = new CreepBuilder(energyAvailable, minParts, {role: this.name});
-        return cB;
+        return new CreepBuilder(energyAvailable, minParts, {role: this.name, gathering: true});
     }
 
     /**
@@ -69,6 +68,15 @@ class Role {
         let droppedEnergy = this.creep.pos.findInRange(FIND_DROPPED_ENERGY, 1);
         if(droppedEnergy) {
             this.creep.pickup(droppedEnergy[0]);
+        }
+    }
+
+    toggleGathering () {
+        if (this.creep.carry.energy > this.creep.carryCapacity * 0.99) {
+            this.creep.memory.gathering = false;
+        }
+        if (this.creep.carry.energy == 0) {
+            this.creep.memory.gathering = true;
         }
     }
 

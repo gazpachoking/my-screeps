@@ -95,11 +95,14 @@ class Harvester extends Role {
             yield newCreep;
         }
     }
+
     run () {
         // Get to our target room first
         if (this.handleRouting()) {
             return;
         }
+        this.toggleGathering();
+        this.pickupDroppedEnergy();
         // Harvester's primary job is to make sure we can spawn creeps
         let roomNeedsEnergy = this.creep.room.energyAvailable < this.creep.room.energyCapacityAvailable;
         if (roomNeedsEnergy && this.creep.carry.energy > 0) {
@@ -111,6 +114,31 @@ class Harvester extends Role {
             if (structures) {
                 this.creep.transfer(structures[0], RESOURCE_ENERGY);
             }
+        }
+        if (this.creep.memory.gathering) {
+            let source = this.creep.pos.findClosestByPath(FIND_MY_CREEPS,
+                {filter: c => c.memory.role == 'sourcer' && c.carry.energy > 10});
+            if (source) {
+                this.creep.moveTo(source);
+                return;
+            }
+            source = this.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+            if (source) {
+                if (this.creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(source);
+                }
+                return;
+            }
+            let storage = this.creep.room.storage;
+            if (roomNeedsEnergy && storage && storage.store[RESOURCE_ENERGY] > 0) {
+                if (this.creep.withdraw(storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(storage);
+                }
+                return;
+            }
+        }
+        else {
+
         }
     }
 }
