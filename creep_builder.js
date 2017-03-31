@@ -33,7 +33,9 @@ class CreepBuilder {
         this.bodyParts = [];
         this.memory = {routing: {}, level: 0};
         this.addMemory(memory);
-        this.addParts(minParts, 1);
+        if (minParts) {
+            this.addParts(minParts, 1);
+        }
         this.priority = 0;
     }
 
@@ -55,7 +57,7 @@ class CreepBuilder {
         for (let i of _.range(maxRepeat)) {
             if (partsInfo.cost <= this.energyLeft) {
                 this.cost += partsInfo.cost;
-                this.bodyParts.concat(partsInfo.parts);
+                this.bodyParts.push(...partsInfo.parts);
                 this.memory.level++;
             }
         }

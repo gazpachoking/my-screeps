@@ -1,8 +1,24 @@
 let CreepBuilder = require('creep_builder');
+let roleFiles = ['harvester', 'sourcer'];
+
+global.ROLE_CLASS = {};
 
 class Role {
-    static register(subclass) {
-        ROLES[subclass.name] = subclass;
+    /**
+     * Returns instantiated subclass of Role for a specific creep.
+     * @param {creep} creep
+     * @return {Role}
+     */
+    static forCreep(creep) {
+        let roleClass = ROLE_CLASS[creep.memory.role];
+        if (!roleClass) {
+            roleClass = Role;
+        }
+        return new roleClass(creep);
+    }
+
+    static getAll () {
+        return _.values(ROLE_CLASS);
     }
 
     static creepBuilder (energyAvailable, minParts) {
@@ -13,7 +29,7 @@ class Role {
      *
      * @param {Room} room
      */
-    static creepNeeded (room) {
+    static *creepsNeeded (room) {
         return false;
     }
 
@@ -56,6 +72,9 @@ class Role {
         // Move to target location
         let targetPos = this.creep.room.memory.positions.creep[this.routing.targetId];
         if (this.creep.pos.x == targetPos.x && this.creep.pos.y == targetPos.y) {
+            if (this.creep.memory.timeToTarget === undefined) {
+                this.creep.memory.timeToTarget = Game.time - this.creep.memory.born;
+            }
             return false;
         }
         this.creep.moveTo(targetPos.x, targetPos.y);
@@ -70,6 +89,11 @@ class Role {
     }
 
     toggleGathering () {
+        // convert old style
+        if (this.creep.memory.working !== undefined) {
+            this.creep.memory.gathering = !this.creep.memory.working;
+            delete this.creep.memory.working;
+        }
         if (this.creep.carry.energy > this.creep.carryCapacity * 0.99) {
             this.creep.memory.gathering = false;
         }
@@ -100,15 +124,32 @@ class Role {
         }
         return result;
     }
+
+    spawnReplacement () {
+        if (!this.creep.memory.timeToTarget) {
+            return false;
+        }
+        if (this.creep.ticksToLive < this.creep.memory.timeToTarget) {
+            let spawn = Game.rooms[this.creep.memory.base];
+            let memory = {
+                routing: {},
+                role: '',
+            }
+        }
+    }
+
+    /**
+     * Main entry into role, called for every creep with that role every tick.
+     * Must be overridden by Role subclasses.
+     */
+    handle () {
+        console.log(this.creep.memory.role + ' is not valid role for ' + this.creep.name);
+    }
 }
 
-// Load all our role files
 global.Role = Role;
-let roleFiles = ['builder', 'harvester', 'miner', 'repairer', 'sourcer', 'upgrader', 'wallRepairer'];
-global.ROLES = [];
-global.ROLE_CLASS = {};
+// Load all our role files
 for (let r of roleFiles) {
-    let rollClass = require('role.' + r);
-    ROLE_CLASS[rollClass.name] = rollClass;
-    ROLES.push(rollClass.name);
+    let roleClass = require('role_' + r);
+    global.ROLE_CLASS[roleClass.name] = roleClass;
 }

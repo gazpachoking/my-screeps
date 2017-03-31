@@ -1,4 +1,5 @@
 Room.prototype.init = function () {
+    console.log('resetting room');
     this.memory.position = {
         creep: {},
         structure: {}
@@ -9,7 +10,7 @@ Room.prototype.init = function () {
     for (let source of sources) {
         let sourcerPos = source.pos.findValidAdjacentPos();
         if (sourcerPos != ERR_NOT_FOUND) {
-            this.memory.positions.creep[source.id] = sourcerPos;
+            this.memory.position.creep[source.id] = sourcerPos;
         }
         else {
             console.log('Failed to find position adjacent to source.');
@@ -18,78 +19,17 @@ Room.prototype.init = function () {
     this.memory.initialized = true;
 };
 
-Room.prototype.run = function () {
-    if (!this.memory.initialized) {
-        this.init();
-    }
-    // run the creeps in the room
-    for (let creep of this.find(FIND_MY_CREEPS)) {
-        creep.run();
-    }
-    // check for hostiles and handle them
-    let hostiles = this.find(FIND_HOSTILE_CREEPS);
-    if (hostiles) {
-
-        let towers = this.find(FIND_STRUCTURES, {
-            filter: (s) => s.structureType == STRUCTURE_TOWER
-        });
-        for (let tower of towers) {
-            let target = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-            if (target != undefined) {
-                tower.attack(target);
-            }
-        }
-    }
-    // do spawning
-    if (Game.time % 5 == 0) {
-        this.checkCreepsNeeded();
-    }
-    if (this.memory.spawnQueue.length > 0) {
-        let spawn = this.findClosestSpawn();
-        // TODO: This only spawns when room is full of energy right now. We might not want/need all of it.
-        if (spawn.room.energyAvailable >= spawn.room.energyCapacityAvailable) {
-            // TODO: Sort spawnqueue by priority
-            let newCreep = this.memory.spawnQueue[0];
-            let name = ROLE_MODULES[newCreep.role].createCreep(spawn, spawn.room.energyAvailable);
-            if (_.isString(name)) {
-                Game.creeps[name].memory = newCreep;
-                this.memory.spawnQueue.shift();
-                return;
-            }
-        }
-    }
-    // TODO: Remove this old spawn code
-    if ((Game.time - 1) % 5 == 0) {
-        for (let spawn of this.find(FIND_MY_SPAWNS)) {
-            spawn.doSpawn();
-        }
-    }
-};
-
-Room.prototype.genCreepMem = function(role, targetId, targetRoom, level, base) {
-    return {
-        role: role,
-        routing: {
-            targetRoom: targetRoom || this.name,
-            targetId: targetId,
-        },
-        level: level,
-        base: base,
-        working: false,
-    };
-};
-
-Room.prototype.inQueue = function (creepMemory) {
+Room.prototype.inSpawnQueue = function (builtCreep) {
     this.memory.spawnQueue = this.memory.spawnQueue || [];
     for (let item of this.memory.spawnQueue) {
-        if (!item.routing) {
+        if (!item.memory.routing) {
             continue;
         }
         let creepTarget = {
-            targetId: item.routing.targetId,
-            targetRoom: item.routing.targetRoom
+            targetId: item.memory.routing.targetId,
+            targetRoom: item.memory.routing.targetRoom
         };
-        let found = _.eq(creepMemory.routing, creepTarget) && creepMemory.role === item.role;
+        let found = _.eq(builtCreep.memory.routing, creepTarget) && builtCreep.memory.role === item.memory.role;
         if (found) {
             return true;
         }
@@ -97,42 +37,13 @@ Room.prototype.inQueue = function (creepMemory) {
     return false;
 };
 
-Room.prototype.queueCreepSpawn = function (role, targetId, targetRoom, level, base) {
-    let newCreep = this.genCreepMem(role, targetId, targetRoom, level, base);
-    if (this.inQueue(newCreep)) {
+Room.prototype.addToSpawnQueue = function (builtCreep) {
+    builtCreep.addMemory({'base': this.name});
+    if (this.inSpawnQueue(builtCreep)) {
         return false;
     }
-    this.memory.spawnQueue.push(newCreep);
+    this.memory.spawnQueue.push(builtCreep);
     return true;
-};
-
-Room.prototype.checkCreepsNeeded = function () {
-    // spawn creep for each source
-    let sources = this.find(FIND_SOURCES);
-
-    let source;
-
-    let isSourcer = function(object) {
-        if (object.role !== 'sourcer') {
-            return false;
-        }
-        if (object.routing && object.routing.targetId !== source.id) {
-          return false;
-        }
-        if (object.routing && object.routing.targetRoom !== source.pos.roomName) {
-          return false;
-        }
-        return true;
-    };
-
-    for (source of sources) {
-        let sourcers = _(Memory.creeps).filter(isSourcer).value();
-        //console.log(JSON.stringify(sourcers));
-        if (sourcers.length === 0) {
-            this.queueCreepSpawn('sourcer', source.id, this.name);
-        }
-    }
-
 };
 
 Room.prototype.findClosestSpawn = function () {
@@ -141,11 +52,18 @@ Room.prototype.findClosestSpawn = function () {
 };
 
 Room.prototype.creepsByRole = function () {
-    let defaults = _.mapValues(ROLES, (...x) => 0);
-    return _.assign(defaults, _.countBy(this.find(FIND_MY_CREEPS), c => c.memory.role));
+    let creepsSpawning = _(this.find(FIND_MY_SPAWNS)).map(s => s.spawning && Game.creeps[s.spawning.name]).compact().value();
+    let creeps = this.find(FIND_MY_CREEPS).concat(...creepsSpawning);
+    let creepNums = _.countBy(creeps, c => c.memory.role);
+    for (let r of Role.getAll()) {
+        if (!r.name in creepNums) {
+            creepNums[r.name] = 0;
+        }
+    }
+    return creepNums;
 };
 
-Room.prototype.handleTowers () {
+Room.prototype.handleTowers = function () {
     let hostiles = this.find(FIND_HOSTILE_CREEPS);
     if (hostiles) {
         let towers = this.find(FIND_STRUCTURES, {
@@ -158,42 +76,54 @@ Room.prototype.handleTowers () {
             }
         }
     }
-}
+};
 
 // Check if the room needs any creeps spawned. Adds them to spawn queue if so.
-Room.prototype.handleNeededCreeps () {
-    for (roleName, roleClass in ROLE_CLASS) {
-        for (let needed in roleClass.creepsNeeded(this)) {
-            // TODO: Make this real
+Room.prototype.handleNeededCreeps = function () {
+    for (let roleClass of Role.getAll()) {
+        for (let needed of roleClass.creepsNeeded(this)) {
+            if (!needed.valid) {
+                console.log('non valid needed: ' + JSON.stringify(needed));
+                continue;
+            }
             this.addToSpawnQueue(needed);
         }
     }
-}
+};
 
-Room.prototype.handleSpawning () {
-    if (this.room.memory.spawnQueue.length == 0) {
+Room.prototype.handleSpawning = function () {
+    if (this.memory.spawnQueue.length == 0) {
         return false;
     }
-
     let availableSpawns = _.filter(this.find(FIND_MY_SPAWNS), s => !s.spawning);
     if (availableSpawns.length == 0) {
         return false;
     }
     this.memory.spawnQueue = _.sortBy(this.memory.spawnQueue, 'priority');
-    for (let spawn in availableSpawns) {
-        spawn.createCustomCreep(this.memory.spawnQueue.shift());
+    let newCreep = this.memory.spawnQueue[0];
+    for (let spawn of availableSpawns) {
+        let result = spawn.createCreep(newCreep.bodyParts, undefined, newCreep.memory);
+        if (_.isString(result)) {
+            console.log('Spawning new ' + newCreep.memory.role + ' creep: ' + result);
+            Game.creeps[result].memory.born = Game.time;
+            this.memory.spawnQueue.shift();
+        }
     }
     return true;
-}
+};
 
-Room.prototype.handle () {
+Room.prototype.handle = function () {
+    if (!this.memory.initialized) {
+        this.init();
+    }
     this.handleTowers();
-    this.handleNeededCreeps();
-    this.handleSpawning(); // todo make it
+    if (Game.time % 5 == 0) {
+        this.handleNeededCreeps();
+    }
+    this.handleSpawning();
 
     // run the creeps in the room
     for (let creep of this.find(FIND_MY_CREEPS)) {
         creep.role.handle();
     }
-
-}
+};
