@@ -1,0 +1,33 @@
+class Upgrader extends Role {
+    static get name () {
+        return 'upgrader';
+    }
+
+    static *creepsNeeded(room) {
+        if (room.creepsByRole()[this.name].length < 2) {
+            yield this.creepBuilder(room.energyCapacityAvailable, 'MWC').addParts('MWC', 5);
+        }
+    }
+
+    // a function to run the logic for this role
+    handle () {
+        this.toggleGathering();
+
+        if (this.creep.carry.energy > 0) {
+            let controller = this.creep.pos.findInRange(this.creep.room.controller, 3);
+            if (controller) {
+                this.creep.upgradeController(controller);
+            }
+        }
+        if (this.creep.memory.gathering) {
+            this.gatherEnergy();
+        }
+        else {
+            if(this.creep.upgradeController(this.creep.room.controller)==ERR_NOT_IN_RANGE) {
+                this.creep.moveTo(this.creep.room.controller);
+            }
+        }
+    }
+}
+
+module.exports = Upgrader;

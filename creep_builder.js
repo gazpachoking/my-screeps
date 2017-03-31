@@ -31,7 +31,7 @@ class CreepBuilder {
         this.energyAvailable = energyAvailable;
         this.cost = 0;
         this.bodyParts = [];
-        this.memory = {routing: {}, level: 0};
+        this.memory = {routing: {}, level: 0, gathering: true};
         this.addMemory(memory);
         if (minParts) {
             this.addParts(minParts, 1);

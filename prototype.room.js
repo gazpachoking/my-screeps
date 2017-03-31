@@ -25,11 +25,10 @@ Room.prototype.inSpawnQueue = function (builtCreep) {
         if (!item.memory.routing) {
             continue;
         }
-        let creepTarget = {
-            targetId: item.memory.routing.targetId,
-            targetRoom: item.memory.routing.targetRoom
-        };
-        let found = _.eq(builtCreep.memory.routing, creepTarget) && builtCreep.memory.role === item.memory.role;
+        let creepRouting = item.memory.routing;
+        let found = builtCreep.memory.routing.targetId == creepRouting.targetId
+            && builtCreep.memory.routing.targetRoom == creepRouting.targetRoom
+            && builtCreep.memory.role === item.memory.role;
         if (found) {
             return true;
         }
@@ -54,13 +53,13 @@ Room.prototype.findClosestSpawn = function () {
 Room.prototype.creepsByRole = function () {
     let creepsSpawning = _(this.find(FIND_MY_SPAWNS)).map(s => s.spawning && Game.creeps[s.spawning.name]).compact().value();
     let creeps = this.find(FIND_MY_CREEPS).concat(...creepsSpawning);
-    let creepNums = _.countBy(creeps, c => c.memory.role);
+    let creepRoles = _.groupBy(creeps, c => c.memory.role);
     for (let r of Role.getAll()) {
-        if (!r.name in creepNums) {
-            creepNums[r.name] = 0;
+        if (!(r.name in creepRoles)) {
+            creepRoles[r.name] = [];
         }
     }
-    return creepNums;
+    return creepRoles;
 };
 
 Room.prototype.handleTowers = function () {
@@ -86,6 +85,9 @@ Room.prototype.handleNeededCreeps = function () {
                 console.log('non valid needed: ' + JSON.stringify(needed));
                 continue;
             }
+            if (!needed.memory.routing.targetRoom) {
+                needed.addRouting(this.name);
+            }
             this.addToSpawnQueue(needed);
         }
     }
@@ -99,7 +101,7 @@ Room.prototype.handleSpawning = function () {
     if (availableSpawns.length == 0) {
         return false;
     }
-    this.memory.spawnQueue = _.sortBy(this.memory.spawnQueue, 'priority');
+    this.memory.spawnQueue = _.sortBy(this.memory.spawnQueue, 'priority').reverse();
     let newCreep = this.memory.spawnQueue[0];
     for (let spawn of availableSpawns) {
         let result = spawn.createCreep(newCreep.bodyParts, undefined, newCreep.memory);

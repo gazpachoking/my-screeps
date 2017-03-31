@@ -5,16 +5,19 @@ class Sourcer extends Role {
 
     static *creepsNeeded (room) {
         let sources = room.find(FIND_SOURCES);
+        let sourcers = room.creepsByRole().sourcer;
 
         for (let source of sources) {
-            let sourcers = room.find(FIND_MY_CREEPS, {filter:
-                (c) => c.memory.role == 'sourcer' && c.memory.routing.targetId == source.id});
-            if (sourcers.length == 0) {
-                yield this.creepBuilder(room.energyCapacityAvailable, 'WCM')
-                    .addParts('WC', 4).addParts('C', 2)
-                    .addRouting(room.name, source.id)
-                    .setPriority(1);
+            let sourcer = _.find(sourcers, c => c.memory.routing.targetId == source.id);
+            if (sourcer !== undefined) {
+                if (!(sourcer.memory.timeToTarget && sourcer.memory.timeToTarget >= sourcer.ticksToLive)) {
+                    continue;
+                }
             }
+            yield this.creepBuilder(room.energyCapacityAvailable, 'WCM')
+                .addParts('WC', 4).addParts('C', 2)
+                .addRouting(room.name, source.id)
+                .setPriority(3);
         }
     }
 

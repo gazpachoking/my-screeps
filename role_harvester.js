@@ -5,10 +5,10 @@ class Harvester extends Role {
 
     static *creepsNeeded (room) {
         let numCreeps = room.creepsByRole();
-        if (numCreeps.harvester < 2) {
-            let energyAllowance = numCreeps.harvester == 0 ? room.energyAvailable : room.energyCapacityAvailable;
-            let newCreep = this.creepBuilder(energyAllowance, 'MWC').addRouting(room.name).setPriority(2);
-            if (numCreeps.sourcer > 0) {
+        if (numCreeps.harvester.length < 1) {
+            let energyAllowance = numCreeps.harvester.length == 0 ? room.energyAvailable : room.energyCapacityAvailable;
+            let newCreep = this.creepBuilder(energyAllowance, 'MWC').addRouting(room.name).setPriority(5);
+            if (numCreeps.sourcer.length > 0) {
                 newCreep.addParts('MC', 5);
             } else {
                 newCreep.addParts('MWC', 4);
@@ -37,25 +37,13 @@ class Harvester extends Role {
             }
         }
         if (this.creep.memory.gathering) {
-            let source = this.creep.pos.findClosestByPath(FIND_MY_CREEPS,
-                {filter: c => c.memory.role == 'sourcer' && c.carry.energy > 20});
-            if (source) {
-                this.creep.moveTo(source);
-                return;
-            }
-            source = this.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
-            if (source) {
-                if (this.creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(source);
+            if (!this.gatherEnergy()) {
+                let source = this.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+                if (source) {
+                    if (this.creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                        this.creep.moveTo(source);
+                    }
                 }
-                return;
-            }
-            let storage = this.creep.room.storage;
-            if (roomNeedsEnergy && storage && storage.store[RESOURCE_ENERGY] > 0) {
-                if (this.creep.withdraw(storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(storage);
-                }
-                return;
             }
         }
         else {
@@ -65,7 +53,9 @@ class Harvester extends Role {
                              && s.energy < s.energyCapacity
             });
             if (!structure) {
-                structure = this.creep.room.storage;
+                structure = this.creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+                    filter: (s) => s.structureType == STRUCTURE_TOWER && s.energy < s.energyCapacity
+                });
             }
             if (this.creep.transfer(structure, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                 this.creep.moveTo(structure);

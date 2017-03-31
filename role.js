@@ -1,5 +1,5 @@
 let CreepBuilder = require('creep_builder');
-let roleFiles = ['harvester', 'sourcer'];
+let roleFiles = ['harvester', 'sourcer', 'upgrader', 'carrier', 'builder'];
 
 global.ROLE_CLASS = {};
 
@@ -89,53 +89,31 @@ class Role {
     }
 
     toggleGathering () {
-        // convert old style
-        if (this.creep.memory.working !== undefined) {
-            this.creep.memory.gathering = !this.creep.memory.working;
-            delete this.creep.memory.working;
-        }
-        if (this.creep.carry.energy > this.creep.carryCapacity * 0.99) {
+        let carrying = _.sum(this.creep.carry);
+        if (carrying > this.creep.carryCapacity * 0.99) {
             this.creep.memory.gathering = false;
         }
-        if (this.creep.carry.energy == 0) {
+        if (carrying < this.creep.carryCapacity * 0.01) {
             this.creep.memory.gathering = true;
         }
     }
 
     gatherEnergy () {
-        let droppedEnergy = this.creep.pos.findInRange(FIND_DROPPED_ENERGY, 1);
-        if (droppedEnergy) {
-            this.creep.pickup(droppedEnergy[0]);
+        let source;
+        if (this.creep.room.storage && this.creep.room.storage.store[RESOURCE_ENERGY] > 0) {
+            source = this.creep.room.storage;
         }
-        // look for sourcers
-        let sources = _.filter(this.creep.room.find(FIND_MY_CREEPS), (c) => c.role == 'sourcer' && c.carry.energy > 10);
-        let source = this.pos.findClosestByPath(sources);
-        //console.log(source);
-        if (source == null && this.creep.carry.energy > 10) {
-            this.memory.working = true;
-            return;
+        else {
+            let sources = _.filter(this.creep.room.find(FIND_MY_CREEPS), (c) => c.memory.role == 'sourcer' && c.carry.energy > 10);
+            source = this.creep.pos.findClosestByPath(sources);
         }
-        //console.log(this.name + source);
-        // try to harvest energy, if the source is not in range
-        let result = this.harvest(source);
-        if (result < 0) {
-            // move towards the source
-            return this.moveTo(source);
-        }
-        return result;
-    }
-
-    spawnReplacement () {
-        if (!this.creep.memory.timeToTarget) {
-            return false;
-        }
-        if (this.creep.ticksToLive < this.creep.memory.timeToTarget) {
-            let spawn = Game.rooms[this.creep.memory.base];
-            let memory = {
-                routing: {},
-                role: '',
+        if (source) {
+            if (this.creep.withdraw(source, RESOURCE_ENERGY) < 0) {
+                this.creep.moveTo(source);
             }
+            return true;
         }
+        return false;
     }
 
     /**
