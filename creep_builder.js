@@ -78,6 +78,10 @@ class CreepBuilder {
         this.priority = val;
         return this;
     }
+
+    get spawnTime () {
+        return this.bodyParts.length * 3;
+    }
 }
 
 module.exports = CreepBuilder;

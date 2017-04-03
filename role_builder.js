@@ -8,16 +8,17 @@ class Builder extends Role {
         if (constructionInRoom == 0) {
             return;
         }
-        // Totally arbitrary guess
+        // Totally arbitrary guess, probably needs scaled based on worker power
         let numBuilders = Math.ceil(constructionInRoom / 20000);
-        if (room.creepsByRole()[this.name] < numBuilders) {
-            yield this.creepBuilder(room.energyCapacityAvailable, 'WCM').addParts('WCM', 5);
+        if (room.creepsByRole()[this.name].length < numBuilders) {
+            yield this.creepBuilder(room.energyCapacityAvailable, 'WCM').addParts('WCM', 7);
         }
     }
 
     handle () {
         this.toggleGathering();
         if (this.creep.carry.energy > 0) {
+            this.repairRoads();
             let constructionSites = this.creep.pos.findInRange(FIND_CONSTRUCTION_SITES, 3);
             if (constructionSites.length > 0) {
                 this.creep.build(constructionSites[0]);

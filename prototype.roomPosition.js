@@ -20,14 +20,18 @@ RoomPosition.prototype.isValid = function() {
 };
 
 RoomPosition.prototype.findValidAdjacentPos = function() {
+    return _.find(this.findAdjacent(), p => p.isValid());
+};
+
+RoomPosition.prototype.findAdjacent = function* () {
     for (let xOffset of [-1, 0, 1]) {
         for (let yOffset of [-1, 0, 1]) {
             if (xOffset == 0 && yOffset == 0) {
                 continue;
             }
             let newPos = new RoomPosition(this.x + xOffset, this.y + yOffset, this.roomName);
-            if (newPos.isValid()) {
-                return newPos;
+            if (Game.getTerrainAt(newPos) !== 'wall') {
+                yield newPos;
             }
         }
     }

@@ -3,14 +3,25 @@ class Sourcer extends Role {
         return 'sourcer';
     }
 
+    static creepFor(source) {
+        let workPartsNeeded = Math.ceil(source.energyCapacity / 600);
+        let newCreep = this.creepBuilder(source.room.energyCapacityAvailable, 'WM');
+        newCreep.addParts('W', workPartsNeeded - 1);
+        newCreep.addParts('C', 7); // consider max?
+        return newCreep
+    }
+
     static *creepsNeeded (room) {
         let sources = room.find(FIND_SOURCES);
         let sourcers = room.creepsByRole().sourcer;
 
         for (let source of sources) {
-            let sourcer = _.find(sourcers, c => c.memory.routing.targetId == source.id);
-            if (sourcer !== undefined) {
-                if (!(sourcer.memory.timeToTarget && sourcer.memory.timeToTarget >= sourcer.ticksToLive)) {
+            let assigned = _.filter(sourcers, c => c.memory.routing.targetId == source.id);
+            if (assigned.length > 1) {
+                continue;
+            }
+            if (assigned.length == 1) {
+                if (!(assigned[0].memory.timeToTarget && assigned[0].memory.timeToTarget >= assigned[0].ticksToLive)) {
                     continue;
                 }
             }

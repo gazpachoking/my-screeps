@@ -5,18 +5,48 @@ Room.prototype.init = function () {
         structure: {}
     };
     this.memory.spawnQueue = [];
-    // Find source mining spots
-    let sources = this.find(FIND_SOURCES);
+    // Set up the base
+
+    base.sources = {};
     for (let source of sources) {
-        let sourcerPos = source.pos.findValidAdjacentPos();
-        if (sourcerPos != ERR_NOT_FOUND) {
-            this.memory.position.creep[source.id] = sourcerPos;
-        }
-        else {
-            console.log('Failed to find position adjacent to source.');
-        }
+        base.sources[source.id] = {
+            pos: source.pos,
+            sourcerPos: source.pos.findValidAdjacentPos(),
+            sourcerCreep: undefined,
+            distanceToStorage: undefined
+        };
     }
     this.memory.initialized = true;
+};
+
+Room.prototype.initBase = function () {
+    let costMatrix = new PathFinder.CostMatrix();
+    let base = {};
+    let minerals = this.room.find(FIND_MINERALS);
+    base.minerals = {};
+    let sources = this.find(FIND_SOURCES);
+    base.sources = _.map(sources, s => {return {pos: s.pos}}).keyBy(s => s.id);
+    let mainSource = sources[0];
+    if (sources.length > 1) {
+        controller.pos.findClosestByPath(sources, {ignoreCreeps: true, ignoreRoads: true});
+    }
+    let upgradePath = mainSource.findPathTo(controller, {ignoreCreeps: true, ignoreRoads: true});
+    base.sources[mainSource.id].sourcerPos = {x: upgradePath[0].x, y: upgradePath[0].y};
+    CONTROLLER_STRUCTURES
+
+
+
+};
+
+Room.prototype.initSources = function () {
+    let sourceDict = {};
+    let sources = this.find(FIND_SOURCES);
+    for (let source of sources) {
+        sourceDict[source.id] = {
+
+        }
+    }
+
 };
 
 Room.prototype.inSpawnQueue = function (builtCreep) {
@@ -51,14 +81,14 @@ Room.prototype.findClosestSpawn = function () {
 };
 
 Room.prototype.creepsByRole = function () {
-    let creepsSpawning = _(this.find(FIND_MY_SPAWNS)).map(s => s.spawning && Game.creeps[s.spawning.name]).compact().value();
-    let creeps = this.find(FIND_MY_CREEPS).concat(...creepsSpawning);
-    let creepRoles = _.groupBy(creeps, c => c.memory.role);
+    let creepsInRoom = _.filter(Game.creeps, c => c.room.name == this.name);
+    let creepRoles = _.groupBy(creepsInRoom, c => c.memory.role);
     for (let r of Role.getAll()) {
         if (!(r.name in creepRoles)) {
             creepRoles[r.name] = [];
         }
     }
+    //console.log(JSON.stringify(_.mapValues(creepRoles, 'length')));
     return creepRoles;
 };
 

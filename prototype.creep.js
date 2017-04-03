@@ -10,3 +10,10 @@ Object.defineProperty(Creep.prototype, 'energyDeficit', {get: function() {
     return this.carryCapacity - this.carry.energy;
 }});
 
+// TODO: This doesn't go here
+Object.defineProperty(Structure.prototype, 'energyDeficit', {get: function() {
+    if (!this.energyCapacity) {
+        return 0;
+    }
+    return this.energyCapacity - this.energy;
+}});

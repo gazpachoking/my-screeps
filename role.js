@@ -71,13 +71,13 @@ class Role {
         }
         // Move to target location
         let targetPos = this.creep.room.memory.positions.creep[this.routing.targetId];
-        if (this.creep.pos.x == targetPos.x && this.creep.pos.y == targetPos.y) {
+        this.creep.moveTo(targetPos.x, targetPos.y);
+        if (this.creep.pos.isNearTo(targetPos.x, targetPos.y)) {
             if (this.creep.memory.timeToTarget === undefined) {
                 this.creep.memory.timeToTarget = Game.time - this.creep.memory.born;
             }
             return false;
         }
-        this.creep.moveTo(targetPos.x, targetPos.y);
         return true;
     }
 
@@ -90,10 +90,10 @@ class Role {
 
     toggleGathering () {
         let carrying = _.sum(this.creep.carry);
-        if (carrying > this.creep.carryCapacity * 0.99) {
+        if (carrying > this.creep.carryCapacity * 0.97) {
             this.creep.memory.gathering = false;
         }
-        if (carrying < this.creep.carryCapacity * 0.01) {
+        if (carrying < this.creep.carryCapacity * 0.03) {
             this.creep.memory.gathering = true;
         }
     }
@@ -114,6 +114,15 @@ class Role {
             return true;
         }
         return false;
+    }
+
+    repairRoads () {
+        let roads = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {filter:
+            s => s.structureType == STRUCTURE_ROAD && s.hits <= (s.hitsMax - REPAIR_POWER)});
+        //console.log(roads);
+        if (roads.length > 0) {
+            this.creep.repair(_.min(roads, r => r.hits));
+        }
     }
 
     /**
