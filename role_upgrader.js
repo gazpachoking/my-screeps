@@ -4,7 +4,7 @@ class Upgrader extends Role {
     }
 
     static *creepsNeeded(room) {
-        if (room.creepsByRole()[this.name].length < 1) {
+        if (room.creepsByRole()[this.name].length < 2) {
             yield this.creepBuilder(room.energyCapacityAvailable, 'MWC').addParts('MWC', 7);
         }
     }

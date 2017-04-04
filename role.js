@@ -100,7 +100,7 @@ class Role {
 
     gatherEnergy () {
         let source;
-        if (this.creep.room.storage && this.creep.room.storage.store[RESOURCE_ENERGY] > 0) {
+        if (this.creep.room.storage && this.creep.room.storage.store[RESOURCE_ENERGY] >= this.creep.energyDeficit) {
             source = this.creep.room.storage;
         }
         else {
@@ -117,7 +117,7 @@ class Role {
     }
 
     repairRoads () {
-        let roads = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {filter:
+        let roads = this.creep.pos.findInRange(FIND_STRUCTURES, 2, {filter:
             s => s.structureType == STRUCTURE_ROAD && s.hits <= (s.hitsMax - REPAIR_POWER)});
         //console.log(roads);
         if (roads.length > 0) {
