@@ -1,4 +1,5 @@
 // import modules
+require('task');
 require('prototype.room');
 require('prototype.creep');
 require('prototype.roomPosition');

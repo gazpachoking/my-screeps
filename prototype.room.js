@@ -133,11 +133,11 @@ Room.prototype.handleNeededCreeps = function () {
 };
 
 Room.prototype.handleSpawning = function () {
-    if (this.memory.spawnQueue.length == 0) {
+    if (this.memory.spawnQueue.length === 0) {
         return false;
     }
     let availableSpawns = _.filter(this.find(FIND_MY_SPAWNS), s => !s.spawning);
-    if (availableSpawns.length == 0) {
+    if (availableSpawns.length === 0) {
         return false;
     }
     this.memory.spawnQueue = _.sortBy(this.memory.spawnQueue, 'priority').reverse();
@@ -147,6 +147,7 @@ Room.prototype.handleSpawning = function () {
         if (_.isString(result)) {
             console.log('Spawning new ' + newCreep.memory.role + ' creep: ' + result);
             Game.creeps[result].memory.born = Game.time;
+            Game.creeps[result].memory.tasks = ROLE_CLASS[newCreep.memory.role].taskList(this);
             this.memory.spawnQueue.shift();
         }
     }
@@ -166,9 +167,9 @@ Room.prototype.handle = function () {
 
     // run the creeps in the room
     for (let creep of this.find(FIND_MY_CREEPS)) {
-        creep.role.handle();
+        creep.handleTasks();
         //if (creep.role.drawVisual) {
-            creep.role.drawVisual(this.visual);
+        //    creep.role.drawVisual(this.visual);
         //}
     }
 };

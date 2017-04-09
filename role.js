@@ -1,5 +1,5 @@
 let CreepBuilder = require('creep_builder');
-let roleFiles = ['harvester', 'sourcer', 'upgrader', 'carrier', 'builder', 'claimer'];
+let roleFiles = ['harvester'];
 
 global.ROLE_CLASS = {};
 

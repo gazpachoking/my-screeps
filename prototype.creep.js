@@ -24,3 +24,19 @@ Object.defineProperty(Structure.prototype, 'energyDeficit', {get: function() {
     }
     return this.energyCapacity - this.energy;
 }});
+
+
+Creep.prototype.handleTasks = function () {
+    if (!this.memory.tasks) {
+        this.memory.tasks = ROLE_CLASS['harvester'].taskList(this.room);
+    }
+    let taskList = this.memory.tasks;
+    let result = Task.FINISHED;
+    while (result === Task.FINISHED) {
+        let nextTask = Task.fromMemory(taskList[0]);
+        result = nextTask.handleTask(this);
+        if (result === Task.FINISHED) {
+            taskList.push(taskList.shift());
+        }
+    }
+};
