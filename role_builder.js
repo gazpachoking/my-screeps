@@ -8,8 +8,11 @@ class Builder extends Role {
         if (constructionInRoom == 0) {
             return;
         }
+        let newCreep = this.creepBuilder(room.energyCapacityAvailable, 'WCM').addParts('WCM', 7);
+        let workParts = _.filter(newCreep.bodyParts, p => p == WORK).length;
+        //console.log(workParts);
         // Totally arbitrary guess, probably needs scaled based on worker power
-        let numBuilders = Math.ceil(constructionInRoom / 20000);
+        let numBuilders = Math.ceil((constructionInRoom / 2500) / workParts);
         if (room.creepsByRole()[this.name].length < numBuilders) {
             yield this.creepBuilder(room.energyCapacityAvailable, 'WCM').addParts('WCM', 7);
         }

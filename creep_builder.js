@@ -82,6 +82,12 @@ class CreepBuilder {
     get spawnTime () {
         return this.bodyParts.length * 3;
     }
+
+    sameJobAs(otherCreep) {
+        return this.memory.role === otherCreep.memory.role &&
+                this.memory.routing.targetRoom === otherCreep.memory.routing.targetRoom &&
+                this.memory.routing.targetId === otherCreep.memory.routing.targetId;
+    }
 }
 
 module.exports = CreepBuilder;

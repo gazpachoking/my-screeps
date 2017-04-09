@@ -1,5 +1,5 @@
 let CreepBuilder = require('creep_builder');
-let roleFiles = ['harvester', 'sourcer', 'upgrader', 'carrier', 'builder'];
+let roleFiles = ['harvester', 'sourcer', 'upgrader', 'carrier', 'builder', 'claimer'];
 
 global.ROLE_CLASS = {};
 
@@ -39,6 +39,12 @@ class Role {
     constructor(creep) {
         this.creep = creep;
         this.name = creep.memory.role;
+    }
+
+    drawVisual (roomVisual) {
+        if (this.icon) {
+            roomVisual.text(this.icon, this.creep.pos.x, this.creep.pos.y);
+        }
     }
 
     get routing() {
@@ -104,7 +110,8 @@ class Role {
             source = this.creep.room.storage;
         }
         else {
-            let sources = _.filter(this.creep.room.find(FIND_MY_CREEPS), (c) => c.memory.role == 'sourcer' && c.carry.energy > 10);
+            let sources = _.filter(this.creep.room.find(FIND_MY_CREEPS),
+                c => c.memory.role == 'sourcer' && c.carry.energy > (c.getActiveBodyparts(WORK) * 2));
             source = this.creep.pos.findClosestByPath(sources);
         }
         if (source) {

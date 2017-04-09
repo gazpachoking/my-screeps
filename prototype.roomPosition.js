@@ -9,8 +9,8 @@ RoomPosition.prototype.isValid = function() {
     }
     // Check there isn't a creep stationed here
     let room = Game.rooms[this.roomName];
-    for (let creepId in room.memory.position.creep) {
-        let pos = room.memory.position.creep[creepId];
+    for (let creepId in room.memory.positions.creep) {
+        let pos = room.memory.positions.creep[creepId];
         if (this.isEqualTo(pos.x, pos.y)) {
             return false;
         }
@@ -20,7 +20,10 @@ RoomPosition.prototype.isValid = function() {
 };
 
 RoomPosition.prototype.findValidAdjacentPos = function() {
-    return _.find(this.findAdjacent(), p => p.isValid());
+    //delete this.memory.position;
+    //console.log(this.findAdjacent().next());
+
+    return _.find([...this.findAdjacent()], p => p.isValid());
 };
 
 RoomPosition.prototype.findAdjacent = function* () {
@@ -30,10 +33,10 @@ RoomPosition.prototype.findAdjacent = function* () {
                 continue;
             }
             let newPos = new RoomPosition(this.x + xOffset, this.y + yOffset, this.roomName);
-            if (Game.getTerrainAt(newPos) !== 'wall') {
+            if (Game.map.getTerrainAt(newPos) !== 'wall') {
                 yield newPos;
             }
         }
     }
-    return ERR_NOT_FOUND;
+
 };

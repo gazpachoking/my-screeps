@@ -3,7 +3,14 @@ class Carrier extends Role {
         return 'carrier';
     }
 
+    get icon () {
+        return '🚚';
+    }
+
     static *creepsNeeded (room) {
+        if (!room.storage) {
+            return;
+        }
         let sources = room.find(FIND_SOURCES);
         let carriers = room.creepsByRole().carrier;
 

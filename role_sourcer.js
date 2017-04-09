@@ -3,9 +3,14 @@ class Sourcer extends Role {
         return 'sourcer';
     }
 
+    get icon () {
+        return '⛏';
+    }
+
     static creepFor(source) {
         let workPartsNeeded = Math.ceil(source.energyCapacity / 600);
-        let newCreep = this.creepBuilder(source.room.energyCapacityAvailable, 'WM');
+        let newCreep = this.creepBuilder(source.room.energyCapacityAvailable, 'WCM');
+        
         newCreep.addParts('W', workPartsNeeded - 1);
         newCreep.addParts('C', 7); // consider max?
         return newCreep
@@ -25,8 +30,7 @@ class Sourcer extends Role {
                     continue;
                 }
             }
-            yield this.creepBuilder(room.energyCapacityAvailable, 'WCM')
-                .addParts('WC', 4).addParts('C', 2)
+            yield this.creepFor(source)
                 .addRouting(room.name, source.id)
                 .setPriority(3);
         }

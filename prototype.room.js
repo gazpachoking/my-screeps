@@ -1,20 +1,22 @@
 Room.prototype.init = function () {
     console.log('resetting room');
-    this.memory.position = {
+    this.memory.positions = {
         creep: {},
         structure: {}
     };
     this.memory.spawnQueue = [];
-    // Set up the base
-
-    base.sources = {};
+    // Find source mining spots
+    let sources = this.find(FIND_SOURCES);
+    console.log(sources);
     for (let source of sources) {
-        base.sources[source.id] = {
-            pos: source.pos,
-            sourcerPos: source.pos.findValidAdjacentPos(),
-            sourcerCreep: undefined,
-            distanceToStorage: undefined
-        };
+        let sourcerPos = source.pos.findValidAdjacentPos();
+        console.log(sourcerPos);
+        if (sourcerPos != ERR_NOT_FOUND) {
+            this.memory.positions.creep[source.id] = sourcerPos;
+        }
+        else {
+            console.log('Failed to find position adjacent to source.');
+        }
     }
     this.memory.initialized = true;
 };
@@ -68,11 +70,18 @@ Room.prototype.inSpawnQueue = function (builtCreep) {
 
 Room.prototype.addToSpawnQueue = function (builtCreep) {
     builtCreep.addMemory({'base': this.name});
-    if (this.inSpawnQueue(builtCreep)) {
-        return false;
+    // If creep with same job is already in the queue, update with new properties
+    for (const [index, creep] of this.memory.spawnQueue.entries()) {
+        if (builtCreep.sameJobAs(creep)) {
+            this.memory.spawnQueue[index] = builtCreep;
+            builtCreep = null;
+            break;
+        }
     }
-    this.memory.spawnQueue.push(builtCreep);
-    return true;
+    // If not already in the queue, add it
+    if (builtCreep) {
+        this.memory.spawnQueue.push(builtCreep);
+    }
 };
 
 Room.prototype.findClosestSpawn = function () {
@@ -145,6 +154,7 @@ Room.prototype.handleSpawning = function () {
 };
 
 Room.prototype.handle = function () {
+    //this.memory.initialized = false;
     if (!this.memory.initialized) {
         this.init();
     }
@@ -157,5 +167,8 @@ Room.prototype.handle = function () {
     // run the creeps in the room
     for (let creep of this.find(FIND_MY_CREEPS)) {
         creep.role.handle();
+        //if (creep.role.drawVisual) {
+            creep.role.drawVisual(this.visual);
+        //}
     }
 };

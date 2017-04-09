@@ -5,7 +5,8 @@ class Harvester extends Role {
     }
 
     static *creepsNeeded (room) {
-        if (Game.time < 18466795 || _.get(Game, 'rooms.E88N74.controller.owner.username') == 'Gazp') {
+        return;
+        if (Game.time < 18466785 || _.get(Game, 'rooms.E88N74.controller.owner.username') == 'Gazp') {
             return
         }
         let claimers = _.filter(Game.creeps, c => c.memory.routing.targetRoom == TARGET);
